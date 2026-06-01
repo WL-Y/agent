@@ -6,6 +6,7 @@
 
 - **AI 恋爱咨询** - 三阶段渐进式对话体验（专业正式 → 温暖亲切 → 深度共情）
 - **多轮对话记忆** - 自定义 MiniMaxMemoryAdvisor，兼容 MiniMax API 的多轮对话格式
+- **RAG 知识库** - 基于本地恋爱文档构建知识库，AI 可检索相关问答进行精准回复
 - **SSE 流式输出** - 实时流式返回 AI 回复
 - **图片理解** - 上传图片，AI 结合图片内容进行分析和回复
 - **情话生成器** - `/情话` 指令生成浪漫情话
@@ -19,6 +20,7 @@
 - Java 21 + Spring Boot 3
 - Spring AI（OpenAI 兼容模式）
 - MiniMax M2.7 大模型
+- RAG 知识库（PgVector 向量数据库）
 - SSE 流式响应
 
 **前端：**
@@ -35,7 +37,16 @@
 │   │   ├── MiniMaxMemoryAdvisor.java  # MiniMax 兼容的多轮对话记忆
 │   │   └── MyLoggerAdvisor.java       # 日志 Advisor
 │   ├── controller/AiController.java   # REST API
+│   ├── rag/                           # RAG 知识库相关
+│   │   ├── LoveAppDocumentLoader.java # 文档加载器
+│   │   ├── LoveAppVectorStoreConfig.java # 向量存储配置
+│   │   ├── QueryRewriter.java         # 查询重写
+│   │   └── MyKeywordEnricher.java     # 关键词增强
 │   └── tools/                         # AI 工具（搜索、文件操作等）
+├── src/main/resources/document/       # RAG 知识库文档
+│   ├── 恋爱常见问题和回答 - 单身篇.md
+│   ├── 恋爱常见问题和回答 - 恋爱篇.md
+│   └── 恋爱常见问题和回答 - 已婚篇.md
 ├── yu-ai-agent-frontend/
 │   ├── src/views/
 │   │   ├── Home.vue                   # 首页
@@ -83,6 +94,22 @@ npm run dev
 | `/api/ai/love_app/chat/sync` | GET | 同步对话 |
 | `/api/ai/love_app/chat/sse` | GET | SSE 流式对话 |
 | `/api/ai/love_app/chatWithImage` | POST | 带图片的流式对话 |
+
+## RAG 知识库
+
+项目内置了恋爱问答知识库，包含单身、恋爱、已婚三个场景的常见问题和回答。
+
+### 工作原理
+
+1. **文档加载** - 从 `src/main/resources/document/` 加载 Markdown 文档
+2. **文本分割** - 使用自定义分割器将文档切分为合适粒度
+3. **向量化存储** - 通过 PgVector 向量数据库存储文档向量
+4. **检索增强** - 用户提问时，检索相关知识片段注入到 AI 上下文中
+5. **查询优化** - 支持查询重写和关键词增强，提高检索准确率
+
+### 启用 RAG
+
+RAG 功能需要 PgVector 向量数据库。配置 `application.yml` 中的数据源和向量存储参数后，取消相关代码注释即可启用。
 
 ## 特殊指令
 
